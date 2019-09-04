@@ -102,7 +102,6 @@ public class HttpServer {
         System.out.println("file: "+file);
         System.out.println(fileLength);
         datos = convertirABytes(file, fileLength);
-
         // Se debe enviar el encabezado de respuesta, para que el cliente entienda y
         // muestre lo que el servidor envio.
         out.println("HTTP/1.1 " + error + mensaje);

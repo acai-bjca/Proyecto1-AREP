@@ -28,6 +28,7 @@ public class Service {
     private static String mensaje;
     private static String archivo;
     private static File rtaFile;
+    private static String rtaFile1;
     private static File RUTA_RESOURCES = new File("src/main/resources");
 
     public static void init(){      
@@ -112,24 +113,19 @@ public class Service {
         }
         System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
         readRequest(solicitud);
-        System.out.println("FILE RTA: "+rtaFile);
-        int fileLength = (int) rtaFile.length();
-        System.out.println(fileLength);
-        byte[] datos = convertirABytes(rtaFile, fileLength);
-        System.out.println("4444444444");
-
-        // Se debe enviar el encabezado de respuesta, para que el cliente entienda y
-        // muestre lo que el servidor envio.
+        System.out.println("FILE longitud: "+rtaFile.length());
+        System.out.println("FILE RTA: "+rtaFile);        
+        
         System.out.println("error: "+error+ " mensaje: "+mensaje+" content: "+content);
         out.println("HTTP/1.1 " + error + mensaje);
         out.println("Content-type: " + content);
-        out.println("Content-length: " + fileLength);
+        out.println("Content-length: " + rtaFile.length());
+        
+        out.write(rtaFile1);
         out.println();
         out.flush();
-        System.out.println("111111111");
-
-        salidaDatos.write(datos, 0, fileLength);
-        System.out.println("22222222222");
+        byte[] datos = rtaFile1.getBytes();
+        salidaDatos.write(rtaFile1.getBytes(), 0, datos.length);
         salidaDatos.flush();
     }
     
@@ -153,17 +149,14 @@ public class Service {
         }        
     }
     
-    public static void searchFilesInApps(String archivo) throws IOException{
-        System.out.println("BUSCANDO ARCHIVOOOOOOOOOOOOOOOOOOOOOOOOS");
-        System.out.println("urlsHandler.length: "+urlsHandler.size());
-        for(String s : urlsHandler.keySet()){
-            System.out.println("Metodoo: "+s);
-        }
-        if(urlsHandler.containsKey(archivo)){
+    public static void searchFilesInApps(String archivo) throws IOException{        
+        if(urlsHandler.containsKey(archivo)){            
+            System.out.println("LO encontro");
             Handler h = urlsHandler.get(archivo);
             archivo = h.process();            
             generateResponse("200");
             content = "text/html";
+            rtaFile1 = archivo;
             rtaFile = new File(archivo);
             
         }else{
@@ -176,6 +169,7 @@ public class Service {
         if (rtaFile.exists()) {
             generateResponse("200");
             content = MimeUtil.getMimeTypes(archivo).toString();
+            rtaFile1 = archivo;
         } else {
            generateResponse("400");
         }
@@ -186,13 +180,15 @@ public class Service {
             error = "404 ";
             mensaje = "NOT FOUND";
             archivo = "fileNotFound.html";
-            content = "text/html";            
+            content = "text/html";
+            rtaFile1 = archivo;
             rtaFile = new File(RUTA_RESOURCES, archivo);
         }else if(typeResponse.equals("404")){
             error = "400 ";
             mensaje = "BAD REQUEST";
             archivo = "badRequest.html";
             content = "text/html";
+            rtaFile1 = archivo;
             rtaFile = new File(RUTA_RESOURCES, archivo);
         }else if(typeResponse.equals("200")){
             error = "200 ";
