@@ -34,4 +34,18 @@ public class StaticMethodHandler implements Handler{
         return null;
     }
     
+
+    public String processWithParam(int num) {
+        try {
+            return method.invoke(num, null).toString();
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(StaticMethodHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(StaticMethodHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(StaticMethodHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+    
 }
