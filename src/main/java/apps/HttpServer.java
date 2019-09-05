@@ -8,7 +8,7 @@ import java.io.*;
 public class HttpServer {
 
     // Paginas del servicio http
-    private static final File RUTA = new File("src/main/resources"); // Donde se alojan las p�ginas
+    private static final File RUTA = new File("/src/main/resources"); // Donde se alojan las p�ginas
     private static String archivo = "index.html"; // P�gina principal
     // Puerto a escuchar
     private static final int PUERTO = 35000;
@@ -85,13 +85,15 @@ public class HttpServer {
         File file = null;
         int fileLength = 0;
         byte[] datos = new byte[0];
-
+        System.out.println(archivo);
         file = new File(RUTA, archivo);
         System.out.println(file.exists());
         if (file.exists()) {
+            System.out.println("Encontroooo");
             error = "200 ";
             mensaje = "OK";
         } else {
+            System.out.println("Nooooo Encontroooo");
             error = "404 ";
             mensaje = "NOT FOUND";
             archivo = "fileNotFound.html";

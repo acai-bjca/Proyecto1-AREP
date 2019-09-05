@@ -5,12 +5,12 @@
  */
 package apps;
 
-
-import eu.medsea.mimeutil.MimeUtil;
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.FileNameMap;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -24,11 +24,12 @@ public class Service {
     public static HashMap<String, Handler> urlsHandler = new HashMap<String, Handler>();
     private static final int PUERTO = 35000;
     private static String error;
-    private static String content;
+    private static String contentType;
     private static String mensaje;
     private static String archivo;
     private static File rtaFile;
     private static String rtaFile1;
+    private static BufferedReader br = null;
     private static File RUTA_RESOURCES = new File("src/main/resources");
 
     public static void init(){      
@@ -73,17 +74,20 @@ public class Service {
         Socket clientSocket = null;
         PrintWriter out = null;
         BufferedReader in = null;
-        BufferedOutputStream salidaDatos = null;
         //Recibir multiples solicitudes no concurrentes
         try {
             System.out.println("Listo para recibir. Escuchando puerto " + PUERTO);
             while (true) {
                 clientSocket = serverSocket.accept();
-                // El in y el out son para el flujo de datos por el socket (streams).
-                out = new PrintWriter(clientSocket.getOutputStream(), true); 
-                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                salidaDatos = new BufferedOutputStream(clientSocket.getOutputStream()); // Muestra los datos respuesta al cliente.
-                processRequest(clientSocket, out, in, salidaDatos);
+                while (!clientSocket.isClosed()) {
+                    // El in y el out son para el flujo de datos por el socket (streams).
+                    out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()),
+                        true); 
+                    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                    //salidaDatos = new BufferedOutputStream(clientSocket.getOutputStream()); // Muestra los datos respuesta al cliente.
+                    processRequest(clientSocket, out, in);
+                }
+                
             }
 
         } catch (IOException e) {
@@ -93,12 +97,11 @@ public class Service {
 
         out.close();
         in.close();
-        salidaDatos.close();
         clientSocket.close();
         serverSocket.close();
     }    
     
-    public static void processRequest(Socket clientSocket, PrintWriter out, BufferedReader in, BufferedOutputStream salidaDatos) throws IOException {
+    public static void processRequest(Socket clientSocket, PrintWriter out, BufferedReader in) throws IOException {
         String inputLine, solicitud = "";
         int count = 0;
         while ((inputLine = in.readLine()) != null) {
@@ -114,18 +117,26 @@ public class Service {
         System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
         readRequest(solicitud);
         System.out.println("FILE longitud: "+rtaFile.length());
-        System.out.println("FILE RTA: "+rtaFile);        
+        System.out.println("FILE RTA1: "+rtaFile1);        
         
-        System.out.println("error: "+error+ " mensaje: "+mensaje+" content: "+content);
+        System.out.println("error: "+error+ " mensaje: "+mensaje+" content: "+contentType);
         out.println("HTTP/1.1 " + error + mensaje);
-        out.println("Content-type: " + content);
+        out.println("Content-type: " + contentType);
         out.println("Content-length: " + rtaFile.length());
-        
-        out.write(rtaFile1);
-        out.println();
-        out.flush();
-        byte[] datos = rtaFile1.getBytes();
-        salidaDatos.write(rtaFile1.getBytes(), 0, datos.length);
+        BufferedOutputStream salidaDatos = new BufferedOutputStream(clientSocket.getOutputStream()); // Muestra los datos respuesta al cliente.        
+        if(solicitud.contains("apps")){
+            File file = new File(RUTA_RESOURCES, archivo);
+            System.out.println(file.exists());
+            int fileLength = (int) file.length();
+            byte[] datos = convertirABytes(file, fileLength);
+            salidaDatos.write(datos, 0, fileLength);
+        }else if(error.equals("200")){
+            String temp;
+            while ((temp = br.readLine()) != null)
+                out.write(temp);
+            br.close();
+        }
+        out.close();
         salidaDatos.flush();
     }
     
@@ -145,7 +156,7 @@ public class Service {
             if(requestURISplit[requestURISplit.length-2].equals("apps")) searchFilesInApps(archivo);
             else generateResponse("400");
         }else{
-            searchFilesInStaticResources(archivo);
+            searchFilesInStaticResources(archivo.substring(archivo.indexOf("/")+1));
         }        
     }
     
@@ -155,9 +166,8 @@ public class Service {
             Handler h = urlsHandler.get(archivo);
             archivo = h.process();            
             generateResponse("200");
-            content = "text/html";
+            contentType = "text/html";
             rtaFile1 = archivo;
-            rtaFile = new File(archivo);
             
         }else{
            generateResponse("404");
@@ -167,9 +177,12 @@ public class Service {
     public static void searchFilesInStaticResources(String archivo) throws IOException{
         rtaFile = new File(RUTA_RESOURCES, archivo);        
         if (rtaFile.exists()) {
-            generateResponse("200");
-            content = MimeUtil.getMimeTypes(archivo).toString();
+            generateResponse("200");           
             rtaFile1 = archivo;
+            FileNameMap fileNameMap = URLConnection.getFileNameMap();
+            contentType = fileNameMap.getContentTypeFor (rtaFile1);
+            System.out.println("Contenido "+contentType);
+            br = new BufferedReader(new FileReader(RUTA_RESOURCES+"/"+archivo));
         } else {
            generateResponse("400");
         }
@@ -180,20 +193,26 @@ public class Service {
             error = "404 ";
             mensaje = "NOT FOUND";
             archivo = "fileNotFound.html";
-            content = "text/html";
-            rtaFile1 = archivo;
-            rtaFile = new File(RUTA_RESOURCES, archivo);
+            //contentType = "text/html";
+            rtaFile1 = archivo;            
+            FileNameMap fileNameMap = URLConnection.getFileNameMap();
+            contentType = fileNameMap.getContentTypeFor (rtaFile1);
+            System.out.println("Contenido "+contentType);
         }else if(typeResponse.equals("404")){
             error = "400 ";
             mensaje = "BAD REQUEST";
             archivo = "badRequest.html";
-            content = "text/html";
+            //contentType = "text/html";
             rtaFile1 = archivo;
-            rtaFile = new File(RUTA_RESOURCES, archivo);
+            System.out.println("rtaFile1 "+ rtaFile1);
+            FileNameMap fileNameMap = URLConnection.getFileNameMap();
+            contentType = fileNameMap.getContentTypeFor (rtaFile1);
+            System.out.println(contentType);
         }else if(typeResponse.equals("200")){
             error = "200 ";
             mensaje = "OK";
-        }        
+        }
+        
     }
     
     private static byte[] convertirABytes(File file, int fileLength) throws IOException {
