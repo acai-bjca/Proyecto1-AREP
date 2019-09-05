@@ -44,10 +44,11 @@ public class Service {
         try {
             clase = Class.forName("WebServiceHello");
             Method[] methods = clase.getMethods();
-            System.out.println("2");
             for (Method method : methods) {
                 if (method.isAnnotationPresent(Web.class)) {
-                    //urlsHandler.put("apps/"+method.getAnnotation(Web.class), new StaticMethodHandler(method));
+                    Class[] argTypes = new Class[] { String[].class };
+                    System.out.println("Metodo guardado: "+method.getName());
+                    System.out.println("NOmbre  a guradar en handler: apps/" + method.getAnnotation(Web.class).value());
                     urlsHandler.put("apps/" + method.getAnnotation(Web.class).value(), new StaticMethodHandler(method));
                 }
             }
@@ -130,25 +131,35 @@ public class Service {
     }
 
     public static void searchFilesInApps(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
+        System.out.println("BUSCANDO ARCHIVOS EN APPS");
+        boolean useParam = false;
+        String parametro = "";
+        if(archivo.contains("?")){
+            parametro = archivo.substring(archivo.indexOf("=")+1);
+            useParam = true;
+            archivo = archivo.substring(0, archivo.indexOf("?"));
+        }
+        System.out.println("NOMBRE ARCHIVO A BUSCAR : "+ archivo);
         if (urlsHandler.containsKey(archivo)) {
+            System.out.println("LO ENCONTRO");            
             out.println("HTTP/1.1 200 OK");
             out.println("Content-Type: text/html");
             out.println("\r\n");
-            out.println(urlsHandler.get(archivo).process());
-        }else if(archivo.contains("?")){
-            String parametro = archivo.substring(archivo.indexOf("=")+1);
-            
-        }
-        else {            
-            archivo = "badRequest.html";
+            if(useParam) out.println(urlsHandler.get(archivo).process(parametro));
+            else {
+                System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process());
+                out.write(urlsHandler.get(archivo).process());
+            }            
+        }else {            
+            archivo = "fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.println("HTTP/1.1 404 BAD REQUEST");
+            out.println("HTTP/1.1 404 NOT FOUND");
             out.println("Content-Type: text/html");
             out.println("Content-length: " + fileLength);
-            out.println();
+            out.println("\r\n");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
@@ -168,7 +179,7 @@ public class Service {
             else if(archivo.contains("html")) out.println("Content-Type: text/html");
             
             out.println("Content-length: " + fileLength);
-            out.println();
+            out.println("\r\n");
             out.flush();
             
             salidaDatos.write(datos, 0, fileLength);
@@ -182,7 +193,7 @@ public class Service {
             out.println("HTTP/1.1 404 BAD REQUEST");
             out.println("Content-Type: text/html");
             out.println("Content-length: " + fileLength);
-            out.println();
+            out.println("\r\n");
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();

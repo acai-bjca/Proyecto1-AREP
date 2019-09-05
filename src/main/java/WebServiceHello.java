@@ -19,7 +19,8 @@ public class WebServiceHello {
     }
     
     @Web("cuadrado2")
-    public static String square(int num) {
+    public static String square(String num) {
+        int numI = Integer.parseInt(num);
         String html = "<!DOCTYPE html>\n"
                 + "<html>\n"
                 + "  <head>\n"
@@ -28,7 +29,7 @@ public class WebServiceHello {
                 + "  </head>\n"
                 + "  <body>\n"
                 + "  <h3>El cuadrado es: </h3>"
-                + "  <h2>"+num*num+"</h2>"
+                + "  <h2>"+numI*numI+"</h2>"
                 + "  </body>\n"
                 + "</html>";
         return html;

@@ -11,5 +11,5 @@ package apps;
  */
 public interface Handler {
     public String process();
-    public String processWithParam(int num);
+    public String process(String num);
 }

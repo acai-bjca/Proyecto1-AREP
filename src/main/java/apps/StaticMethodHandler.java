@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * @author estudiante
  */
 public class StaticMethodHandler implements Handler{
-    public Method method;            
+    public Method method;          
 
     StaticMethodHandler(Method method) {
         this.method = method;
@@ -35,9 +35,9 @@ public class StaticMethodHandler implements Handler{
     }
     
 
-    public String processWithParam(int num) {
-        try {
-            return method.invoke(num, null).toString();
+    public String process(String num) {
+        try {            
+            return method.invoke(null, num).toString();
         } catch (IllegalAccessException ex) {
             Logger.getLogger(StaticMethodHandler.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalArgumentException ex) {
