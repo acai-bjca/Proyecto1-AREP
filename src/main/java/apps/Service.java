@@ -170,13 +170,22 @@ public class Service {
     public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {       
         String path = RUTA_RESOURCES + archivo;
         BufferedReader br = null;
+        if(archivo.equals("/")) archivo="/index.html";
         try {
             br = new BufferedReader(new FileReader(path));
         } catch (Exception e) {
+            System.out.println("No lo encontro");
+            StringBuffer sb = new StringBuffer();
+            try (BufferedReader reader = new BufferedReader(new FileReader(RUTA_RESOURCES + "/notFound.html"))) {
+                String infile = null;
+                while ((infile = reader.readLine()) != null) {
+                    sb.append(infile);
+                }
+            }
             out.println("HTTP/1.1 404 Not Found\r");
-            out.println("Content-Type: text/html\r");
+            out.println("Content-Type: text/html\r");            
             out.println("\r");
-            e.printStackTrace();
+            out.println(sb.toString()+"\r");
         }
         
         out.println("HTTP/1.1 202 Ok\r");
