@@ -5,16 +5,18 @@
  */
 package apps;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Method;
-import java.net.FileNameMap;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.sf.image4j.codec.ico.ICODecoder;
+import net.sf.image4j.codec.ico.ICOEncoder;
 
 /**
  *
@@ -102,7 +104,7 @@ public class Service {
             if (inputLine.contains("GET")) {
                 solicitud = inputLine; // Lee la primera linea de la solicitud
                 System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
-                readRequest(solicitud, out, salidaDatos);                
+                readRequest(solicitud, out, salidaDatos, clientSocket);                
             }
             if (!in.ready()) { //Ready devuelve verdadero si la secuencia está lista para ser leída.
                 break;
@@ -112,7 +114,7 @@ public class Service {
         salidaDatos.flush();
     }
 
-    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
+    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {
         StringTokenizer tokens = new StringTokenizer(solicitud); // Divide la solicitud en diferentes "tokens" separados por espacio.
         String metodo = tokens.nextToken().toUpperCase(); // Obtenemos el primer token, que en este caso es el metodo de
         // la solicitud HTTP.
@@ -122,7 +124,14 @@ public class Service {
         //String archivo = requestURISplit[requestURISplit.length-1];
         String archivo = requestURI;
         System.out.println("archivo " + archivo);
-
+        if (requestURI.contains("favicon.ico")) {
+            out.println("HTTP/1.1 200 OK\r");
+            out.println("Content-Type: image/vnd.microsoft.icon\r");
+            out.println("\r");
+            List<BufferedImage> images = ICODecoder
+                    .read(new File(System.getProperty("user.dir") +RUTA_RESOURCES));
+            ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
+        }
         if (requestURI.contains("apps")) {
             searchFilesInApps(archivo, out, salidaDatos);
         } else {
