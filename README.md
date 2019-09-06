@@ -1,7 +1,7 @@
 ## Proyecto1 AREP
 ### Framework - Cliente Servidor
 
-En este repositorio, se implementó una aplicación web Cliente Servidor desplegada en Heroku, para lacual se implementó un framework.
+En este repositorio, se implementó una aplicación web Cliente Servidor desplegada en Heroku. Implementa un framework de IoC (inversión de control) para ofrecer un modelo de software Cliente-Servidor. El servidor recibe peticiones del cliente por el navegador desde la aplicación desplegada en heroku. Puede solicitar recursos estáticos: imágenes jpg y archivos html, como también permite responder a peticiones de funciones implementadas en el servidor propiamente, como generar un html a través de un método sin parámetros y con parámetros. Para el caso de parámetros, se le puede pasar un número y el servidor le responderá el cuadrado del mismo.
 
 ___
 ### Instalación - Uso del proyecto como librería
