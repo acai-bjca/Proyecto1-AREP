@@ -143,25 +143,25 @@ public class Service {
             out.println("HTTP/1.1 200 OK\r");
             out.println("Content-Type: text/html\r");
             out.println("\r");
-            if(useParam) out.println(urlsHandler.get(archivo).process(parametro));
+            if(useParam) out.println(urlsHandler.get(archivo).process(parametro)+"\r");
             else {
                 System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process());
-                out.println(urlsHandler.get(archivo).process());
-            }            
-        }else {            
-            archivo = "fileNotFound.html";
+                out.println(urlsHandler.get(archivo).process()+"\r");
+            }           
+        }
+        /*else {            
+            archivo = "/fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
             out.println("HTTP/1.1 404 Not Found\r");
             out.println("Content-Type: text/html\r");
-            out.println("Content-length: " + fileLength+"\r");
-            out.println("\r");            
+            out.println("Content-length: " + fileLength+"\r");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
-        }
+        }*/
     }
 
     public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
@@ -175,7 +175,7 @@ public class Service {
             if(archivo.contains("jpg") || archivo.contains("jpeg")) out.println("Content-Type: image/jpeg\r");
             else if(archivo.contains("png")) out.println("Content-Type: image/png\r");
             else if(archivo.contains("html")) out.println("Content-Type: text/html\r");
-            else if(archivo.contains("favicon.ico")) out.println("Content-Type: image/vnd.microsoft.icon\r");
+            //else if(archivo.contains("favicon.ico")) out.println("Content-Type: image/vnd.microsoft.icon\r");
             
             out.println("Content-length: " + fileLength+"\r");
             out.flush();
@@ -183,15 +183,14 @@ public class Service {
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
         } else {
-            archivo = "fileNotFound.html";
+            archivo = "/fileNotFound.html";
             file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
             out.println("HTTP/1.1 404 Not Found\r");
             out.println("Content-Type: text/html\r");
-            out.println("Content-length: " + fileLength+"\r");
-            out.println("\r");            
+            out.println("Content-length: " + fileLength+"\r");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
