@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - Controller",
+            "request": "launch",
+            "mainClass": "apps.Controller",
+            "projectName": "Proyecto1-AREP"
+        }
+    ]
+}

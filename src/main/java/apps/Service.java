@@ -116,9 +116,8 @@ public class Service {
         StringTokenizer tokens = new StringTokenizer(solicitud); // Divide la solicitud en diferentes "tokens" separados por espacio.
         String metodo = tokens.nextToken().toUpperCase(); // Obtenemos el primer token, que en este caso es el metodo de
         // la solicitud HTTP.
-        String requestURI = tokens.nextToken(); // Obtenemos el segundo token: identificador recurso: /apps/archivo.tipo.        
-
-        //String archivo = requestURISplit[requestURISplit.length-1];
+        String requestURI = tokens.nextToken(); // Obtenemos el segundo token: identificador recurso: /apps/archivo.tipo.
+        
         String archivo = requestURI;
         System.out.println("archivo " + archivo);
 
@@ -176,9 +175,9 @@ public class Service {
             if(archivo.contains("jpg") || archivo.contains("jpeg")) out.println("Content-Type: image/jpeg\r");
             else if(archivo.contains("png")) out.println("Content-Type: image/png\r");
             else if(archivo.contains("html")) out.println("Content-Type: text/html\r");
+            else if(archivo.contains("favicon.ico")) out.println("Content-Type: image/vnd.microsoft.icon\r");
             
             out.println("Content-length: " + fileLength+"\r");
-            out.println("\r");
             out.flush();
             
             salidaDatos.write(datos, 0, fileLength);
