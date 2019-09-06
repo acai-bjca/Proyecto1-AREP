@@ -152,18 +152,18 @@ public class Service {
                 out.println(urlsHandler.get(archivo).process()+"\r");
             }           
         }
-        else {            
-            archivo = "fileNotFound.html";
-            File file = new File(RUTA_RESOURCES, archivo);
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
+        else {
+            StringBuffer sb = new StringBuffer();
+            try (BufferedReader reader = new BufferedReader(new FileReader(RUTA_RESOURCES + "/notFound.html"))) {
+                String infile = null;
+                while ((infile = reader.readLine()) != null) {
+                    sb.append(infile);
+                }
+            }
             out.println("HTTP/1.1 404 Not Found\r");
-            out.println("Content-Type: text/html\r");
-            out.println("Content-length: " + fileLength+"\r");            
-            out.flush();
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
+            out.println("Content-Type: text/html\r");            
+            out.println("\r");
+            out.println(sb.toString()+"\r");
         }
     }
 
