@@ -148,7 +148,8 @@ public class Service {
             else {
                 System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process()+"\r");
                 out.write(urlsHandler.get(archivo).process());
-            }            
+            }
+            out.write("\r");
         }else {            
             archivo = "fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
@@ -158,6 +159,7 @@ public class Service {
             out.write("HTTP/1.1 404 NOT FOUND\r");
             out.write("Content-Type: text/html\r");
             out.write("Content-length: " + fileLength +"\r");
+            out.write("\r");
             //out.write("\r\n");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
@@ -175,9 +177,9 @@ public class Service {
             
             if(archivo.contains("jpg") || archivo.contains("jpeg")) out.write("Content-Type: image/jpeg\r");
             else if(archivo.contains("png")) out.write("Content-Type: image/png\r");
-            else if(archivo.contains("html")) out.write("Content-Type: text/html\r");
-            
+            else if(archivo.contains("html")) out.write("Content-Type: text/html\r");            
             out.write("Content-length: " + fileLength +"\r");
+            out.write("\r");
             out.flush();
             
             salidaDatos.write(datos, 0, fileLength);
@@ -191,6 +193,7 @@ public class Service {
             out.write("HTTP/1.1 404 BAD REQUEST\r");
             out.write("Content-Type: text/html\r");
             out.write("Content-length: " + fileLength +"\r");
+            out.write("\r");
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
