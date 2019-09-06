@@ -141,13 +141,12 @@ public class Service {
         }
         System.out.println("NOMBRE ARCHIVO A BUSCAR : "+ archivo);
         if (urlsHandler.containsKey(archivo)) {
-            System.out.println("LO ENCONTRO");            
-            out.write("HTTP/1.1 200 OK");
-            out.write("Content-Type: text/html");
-            out.write("\r\n");
-            if(useParam) out.println(urlsHandler.get(archivo).process(parametro));
+            System.out.println("LO ENCONTRO\r");            
+            out.write("HTTP/1.1 200 OK\r");
+            out.write("Content-Type: text/html\r");
+            if(useParam) out.println(urlsHandler.get(archivo).process(parametro)+"\r");
             else {
-                System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process());
+                System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process()+"\r");
                 out.write(urlsHandler.get(archivo).process());
             }            
         }else {            
@@ -156,10 +155,10 @@ public class Service {
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 404 NOT FOUND");
-            out.write("Content-Type: text/html");
-            out.write("Content-length: " + fileLength);
-            out.write("\r\n");            
+            out.write("HTTP/1.1 404 NOT FOUND\r");
+            out.write("Content-Type: text/html\r");
+            out.write("Content-length: " + fileLength +"\r");
+            //out.write("\r\n");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
@@ -172,14 +171,13 @@ public class Service {
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 202 OK");
+            out.write("HTTP/1.1 202 OK\r");
             
-            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.write("Content-Type: image/jpeg");
-            else if(archivo.contains("png")) out.write("Content-Type: image/png");
-            else if(archivo.contains("html")) out.write("Content-Type: text/html");
+            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.write("Content-Type: image/jpeg\r");
+            else if(archivo.contains("png")) out.write("Content-Type: image/png\r");
+            else if(archivo.contains("html")) out.write("Content-Type: text/html\r");
             
-            out.write("Content-length: " + fileLength);
-            out.write("\r\n");
+            out.write("Content-length: " + fileLength +"\r");
             out.flush();
             
             salidaDatos.write(datos, 0, fileLength);
@@ -190,10 +188,9 @@ public class Service {
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 404 BAD REQUEST");
-            out.write("Content-Type: text/html");
-            out.write("Content-length: " + fileLength);
-            out.write("\r\n");
+            out.write("HTTP/1.1 404 BAD REQUEST\r");
+            out.write("Content-Type: text/html\r");
+            out.write("Content-length: " + fileLength +"\r");
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
