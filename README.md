@@ -26,25 +26,6 @@ ___
 
 Para leer la documentación diríjase a: <https://github.com/acai-bjca/Proyecto1-AREP/tree/master/src/main/resources/documentacion/apidocs/apps>
 
-
-___
-### Ejecutando las pruebas
-
-Para ejecutar las pruebas puede usar el comando:
->mvn package
-
-
-___
-### Pruebas
-Para mostrar la correcta funcionalidad de la aplicación, se realizó una prueba manual.
-Primero se ingresaron los números separados por ','.
-
-![](src/main/resources/index.png)
-
-A continuación, se puede ver el resultado generado una vez se dió clic en el botón Calcular.
-
-![](src/main/resources/calculo.png)
-
 ___
 ### Despliegue
 
