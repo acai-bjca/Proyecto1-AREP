@@ -20,11 +20,7 @@ public class StaticMethodHandler implements Handler{
     StaticMethodHandler(Method method) {
         this.method = method;
     }
-    
-    /**
-     * process Invoca el metodo sin parametros
-     * @return Cadena con la respuesta dada al invocar el metodo
-     */
+            
     public String process() {
         try {
             return method.invoke(null, null).toString();
@@ -38,11 +34,7 @@ public class StaticMethodHandler implements Handler{
         return null;
     }
     
-    /**
-     * process Invoca el metodo con parametros
-     * @param num Numero en cadena que sera usado por el metodo para generar la respuesta
-     * @return 
-     */
+
     public String process(String num) {
         try {            
             return method.invoke(null, num).toString();
