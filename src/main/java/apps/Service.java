@@ -131,8 +131,7 @@ public class Service {
             List<BufferedImage> images = ICODecoder
                     .read(new File(System.getProperty("user.dir") +RUTA_RESOURCES));
             ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
-        }
-        if (requestURI.contains("apps")) {
+        }if (requestURI.contains("apps")) {
             searchFilesInApps(archivo, out, salidaDatos);
         } else {
             searchFilesInStaticResources(archivo.substring(archivo.indexOf("/") + 1), out, salidaDatos);
