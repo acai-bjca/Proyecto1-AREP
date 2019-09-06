@@ -22,10 +22,6 @@ Si desea usar éste repositorio como librería en su proyecto, realice los sigui
 import apps.*;
 
 ___
-### Insignias
-
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/31b363d5a6fe4c9b8eb2d1cd22bc9c37)](https://www.codacy.com/app/acai-bjca/Ejercicio-1-AREP?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=acai-bjca/Ejercicio-1-AREP&amp;utm_campaign=Badge_Grade)
-___
 ### Documentación
 
 Para leer la documentación diríjase a: <https://github.com/acai-bjca/Proyecto1-AREP/tree/master/src/main/resources/documentacion/apidocs/apps>
@@ -52,7 +48,7 @@ A continuación, se puede ver el resultado generado una vez se dió clic en el b
 ___
 ### Despliegue
 
-
+El link de la aplicacion web desplegada en heroku es: https://proyecto1-arep.herokuapp.com
 
 ___
 ### Construido con
