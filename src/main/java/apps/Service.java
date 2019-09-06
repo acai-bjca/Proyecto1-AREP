@@ -149,7 +149,7 @@ public class Service {
                 out.println(urlsHandler.get(archivo).process()+"\r");
             }           
         }
-        /*else {            
+        else {            
             archivo = "/fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
@@ -161,7 +161,7 @@ public class Service {
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
-        }*/
+        }
     }
 
     public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
