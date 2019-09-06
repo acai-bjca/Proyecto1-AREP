@@ -5,16 +5,19 @@
  */
 package apps;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Method;
-import java.net.FileNameMap;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import net.sf.image4j.codec.ico.ICODecoder;
+import net.sf.image4j.codec.ico.ICOEncoder;
 
 /**
  *
@@ -24,7 +27,7 @@ public class Service {
 
     public static HashMap<String, Handler> urlsHandler = new HashMap<String, Handler>();
     private static final int PUERTO = getPort();
-    private static File RUTA_RESOURCES = new File("src/main/resources");
+    private static String RUTA_RESOURCES = "src/main/resources";
 
     public static void init() {
         String ruta = "src/main/java";
@@ -102,7 +105,7 @@ public class Service {
             if (inputLine.contains("GET")) {
                 solicitud = inputLine; // Lee la primera linea de la solicitud
                 System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
-                readRequest(solicitud, out, salidaDatos);                
+                readRequest(solicitud, out, salidaDatos, clientSocket);                
             }
             if (!in.ready()) { //Ready devuelve verdadero si la secuencia está lista para ser leída.
                 break;
@@ -112,7 +115,7 @@ public class Service {
         salidaDatos.flush();
     }
 
-    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
+    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {
         StringTokenizer tokens = new StringTokenizer(solicitud); // Divide la solicitud en diferentes "tokens" separados por espacio.
         String metodo = tokens.nextToken().toUpperCase(); // Obtenemos el primer token, que en este caso es el metodo de
         // la solicitud HTTP.
@@ -124,7 +127,7 @@ public class Service {
         if (requestURI.contains("apps")) {
             searchFilesInApps(archivo, out, salidaDatos);
         } else {
-            searchFilesInStaticResources(archivo, out, salidaDatos);
+            searchFilesInStaticResources(archivo, out, salidaDatos, clientSocket);
         }
     }
 
@@ -150,7 +153,7 @@ public class Service {
             }           
         }
         else {            
-            archivo = "/fileNotFound.html";
+            archivo = "fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
@@ -164,37 +167,45 @@ public class Service {
         }
     }
 
-    public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
-        File file = new File(RUTA_RESOURCES, archivo);
-        if (file.exists()) {
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
-            out.println("HTTP/1.1 202 Ok\r");
-            
-            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.println("Content-Type: image/jpeg\r");
-            else if(archivo.contains("png")) out.println("Content-Type: image/png\r");
-            else if(archivo.contains("html")) out.println("Content-Type: text/html\r");
-            //else if(archivo.contains("favicon.ico")) out.println("Content-Type: image/vnd.microsoft.icon\r");
-            
-            out.println("Content-length: " + fileLength+"\r");
-            out.flush();
-            
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
-        } else {
-            archivo = "/fileNotFound.html";
-            file = new File(RUTA_RESOURCES, archivo);
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
+    public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {       
+        String path = RUTA_RESOURCES + archivo;
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(path));
+        } catch (Exception e) {
             out.println("HTTP/1.1 404 Not Found\r");
             out.println("Content-Type: text/html\r");
-            out.println("Content-length: " + fileLength+"\r");            
-            out.flush();
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
+            out.println("\r");
+            e.printStackTrace();
         }
+        
+        out.println("HTTP/1.1 202 Ok\r");
+        if(archivo.contains("jpg")){
+            out.println("Content-Type: image/jpeg\r");
+            out.println("\r");
+            System.out.println("RUTAAAAAAAAAAAAAAAA: "+RUTA_RESOURCES + archivo);
+            BufferedImage image = ImageIO.read(new File(RUTA_RESOURCES + archivo));
+            ImageIO.write(image, "JPG", clientSocket.getOutputStream());
+        }
+        else if(archivo.contains("html")){  
+            StringBuffer sb = new StringBuffer();
+            try (BufferedReader reader = new BufferedReader(new FileReader(RUTA_RESOURCES + archivo))) {
+                String infile = null;
+                while ((infile = reader.readLine()) != null) {
+                    sb.append(infile);
+                }
+            }
+            out.println("Content-Type: text/html\r");
+            out.println("\r");
+            out.println(sb.toString());         
+            
+        }
+        else if(archivo.contains("favicon.ico")){  
+            out.println("Content-Type: image/vnd.microsoft.icon\r");
+            out.println("\r");
+            List<BufferedImage> images = ICODecoder.read(new File(RUTA_RESOURCES + archivo));
+            ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
+        }         
     }
 
     private static byte[] convertirABytes(File file, int fileLength) throws IOException {
