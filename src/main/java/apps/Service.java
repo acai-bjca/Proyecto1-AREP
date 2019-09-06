@@ -168,9 +168,9 @@ public class Service {
     }
 
     public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {       
-        String path = RUTA_RESOURCES + archivo;
         BufferedReader br = null;
         if(archivo.equals("/")) archivo="/index.html";
+        String path = RUTA_RESOURCES + archivo;
         try {
             br = new BufferedReader(new FileReader(path));
         } catch (Exception e) {
