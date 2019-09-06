@@ -1,5 +1,6 @@
 package apps;
 
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.net.FileNameMap;
@@ -7,9 +8,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import net.sf.image4j.codec.ico.ICODecoder;
+import net.sf.image4j.codec.ico.ICOEncoder;
 
 /**
  *
@@ -65,7 +70,6 @@ public class Service {
             Socket clientSocket = null;
             PrintWriter out = null;
             BufferedReader in = null;
-            BufferedOutputStream salidaDatos = null;
             //Recibir multiples solicitudes no concurrentes
             try {
                 System.out.println("Listo para recibir. Escuchando puerto " + PUERTO);
@@ -75,8 +79,7 @@ public class Service {
                     out = new PrintWriter(new OutputStreamWriter(clientSocket.getOutputStream()),
                             true);
                     in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                    salidaDatos = new BufferedOutputStream(clientSocket.getOutputStream()); // Muestra los datos respuesta al cliente.
-                    processRequest(clientSocket, out, in, salidaDatos);
+                    processRequest(clientSocket, out, in);
                 }
                 out.close();
                 in.close();
@@ -90,42 +93,42 @@ public class Service {
         }
     }
 
-    public static void processRequest(Socket clientSocket, PrintWriter out, BufferedReader in, BufferedOutputStream salidaDatos) throws IOException {
+    public static void processRequest(Socket clientSocket, PrintWriter out, BufferedReader in) throws IOException {
         String inputLine, solicitud = "";        
         while ((inputLine = in.readLine()) != null) {
             System.out.println("Received: " + inputLine);
             if (inputLine.contains("GET")) {
                 solicitud = inputLine; // Lee la primera linea de la solicitud
                 System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
-                readRequest(solicitud, out, salidaDatos);                
+                readRequest(solicitud, out, clientSocket);                
             }
             if (!in.ready()) { //Ready devuelve verdadero si la secuencia está lista para ser leída.
                 break;
             }
         }
         out.close();
-        salidaDatos.flush();
     }
 
-    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
+    public static void readRequest(String solicitud, PrintWriter out, Socket clientSocket) throws IOException {
         StringTokenizer tokens = new StringTokenizer(solicitud); // Divide la solicitud en diferentes "tokens" separados por espacio.
         String metodo = tokens.nextToken().toUpperCase(); // Obtenemos el primer token, que en este caso es el metodo de
         // la solicitud HTTP.
         String requestURI = tokens.nextToken().substring(1); // Obtenemos el segundo token: identificador recurso: /apps/archivo.tipo.
-        String[] requestURISplit = requestURI.split("/"); // [apps,archivo.tipo].
+        String[] requestURISplit = requestURI.split(" "); // [apps,archivo.tipo].
 
         //String archivo = requestURISplit[requestURISplit.length-1];
         String archivo = requestURI;
         System.out.println("archivo " + archivo);
 
         if (requestURI.contains("apps")) {
-            searchFilesInApps(archivo, out, salidaDatos);
+            searchFilesInApps(archivo.substring(archivo.indexOf("/") + 1), out);
         } else {
-            searchFilesInStaticResources(archivo.substring(archivo.indexOf("/") + 1), out, salidaDatos);
+            //searchFilesInStaticResources(archivo.substring(archivo.indexOf("/") + 1), out, clientSocket);
+            searchFilesInStaticResources(archivo, out, clientSocket);
         }
     }
 
-    public static void searchFilesInApps(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
+    public static void searchFilesInApps(String archivo, PrintWriter out) throws IOException {
         System.out.println("BUSCANDO ARCHIVOS EN APPS");
         boolean useParam = false;
         String parametro = "";
@@ -137,62 +140,88 @@ public class Service {
         System.out.println("NOMBRE ARCHIVO A BUSCAR : "+ archivo);
         if (urlsHandler.containsKey(archivo)) {
             System.out.println("LO ENCONTRO");            
-            out.println("HTTP/1.1 200 OK");
-            out.println("Content-Type: text/html");
-            out.println("\r\n");
+            out.println("HTTP/1.1 200 OK\r");
+            out.println("Content-Type: text/html\r");
+            out.println("\r");
             if(useParam) out.println(urlsHandler.get(archivo).process(parametro));
             else {
                 System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process());
                 out.write(urlsHandler.get(archivo).process());
             }            
         }else {            
-            archivo = "fileNotFound.html";
-            File file = new File(RUTA_RESOURCES, archivo);
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
-            out.println("HTTP/1.1 404 NOT FOUND");
-            out.println("Content-Type: text/html");
-            out.println("Content-length: " + fileLength);
-            out.println("\r\n");            
-            out.flush();
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
+            StringBuffer sb = new StringBuffer();
+            try (BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.dir") + "notFound.html"))) {
+                String infile = null;
+                while ((infile = reader.readLine()) != null) {
+                    sb.append(infile);
+                }
+            }
+            out.println("HTTP/1.1 404 Not Found\r");
+            out.println("Content-Type: text/html\r");
+            out.println("\r");
+            out.println(sb.toString());
         }
     }
 
-    public static void searchFilesInStaticResources(String archivo, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
-        File file = new File(RUTA_RESOURCES, archivo);
-        if (file.exists()) {
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
-            out.println("HTTP/1.1 202 OK");
-            
-            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.println("Content-Type: image/jpeg");
-            else if(archivo.contains("png")) out.println("Content-Type: image/png");
-            else if(archivo.contains("html")) out.println("Content-Type: text/html");
-            
-            out.println("Content-length: " + fileLength);
-            out.println("\r\n");
-            out.flush();
-            
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
-        } else {
-            archivo = "badRequest.html";
-            file = new File(RUTA_RESOURCES, archivo);
-            int fileLength = (int) file.length();
-            byte[] datos = convertirABytes(file, fileLength);
-            
-            out.println("HTTP/1.1 404 BAD REQUEST");
-            out.println("Content-Type: text/html");
-            out.println("Content-length: " + fileLength);
-            out.println("\r\n");
-            out.flush();
-            salidaDatos.write(datos, 0, fileLength);
-            salidaDatos.flush();
+    public static void searchFilesInStaticResources(String archivo, PrintWriter out, Socket clientSocket) throws IOException {
+        System.out.println("Nombre archivo recursos: "+archivo);
+        if(archivo.equals("")){
+            archivo = "index.html";
         }
+        
+        File file = new File(RUTA_RESOURCES, archivo);        
+        if (file.exists()) {
+            System.out.println("Encontro recurso estatico");
+            if(archivo.contains("jpg") || archivo.contains("jpeg")) imageResponse(out, archivo, clientSocket);
+            else if(archivo.contains("html")) htmlResponse(out, archivo);
+            else if(archivo.contains("favicon.ico")) faviconResponse(out, archivo, clientSocket);
+        } else {
+            notFoundResponse(out, archivo);
+        }
+    }
+    
+    private static void htmlResponse(PrintWriter out,  String fileName) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        try (BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.dir") + fileName))) {
+            String infile = null;
+            while ((infile = reader.readLine()) != null) {
+                sb.append(infile);
+            }
+        }
+        out.println("HTTP/1.1 200 OK\r");
+        out.println("Content-Type: text/html\r");
+        out.println("\r");
+        out.println(sb.toString());
+    }
+    
+    private static void imageResponse(PrintWriter out,  String fileName, Socket clientSocket) throws IOException {
+        out.println("HTTP/1.1 200 OK\r");
+        out.println("Content-Type: image/jpg\r");
+        out.println("\r");
+        BufferedImage image = ImageIO.read(new File(System.getProperty("user.dir") + "/"+fileName));
+        ImageIO.write(image, "JPG", clientSocket.getOutputStream());
+    }
+    
+    private static void notFoundResponse(PrintWriter out,  String fileName) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        try (BufferedReader reader = new BufferedReader(new FileReader(System.getProperty("user.dir") + fileName))) {
+            String infile = null;
+            while ((infile = reader.readLine()) != null) {
+                sb.append(infile);
+            }
+        }
+        out.println("HTTP/1.1 404 Not Found\r");
+        out.println("Content-Type: text/html\r");
+        out.println("\r");
+        out.println(sb.toString());
+    }
+    
+    private static void faviconResponse(PrintWriter out, String fileName, Socket clientSocket) throws IOException {
+        out.println("HTTP/1.1 200 OK\r");
+        out.println("Content-Type: image/vnd.microsoft.icon\r");
+        out.println("\r");
+        List<BufferedImage> images = ICODecoder.read(new File(System.getProperty("user.dir") + fileName));
+        ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
     }
 
     private static byte[] convertirABytes(File file, int fileLength) throws IOException {
