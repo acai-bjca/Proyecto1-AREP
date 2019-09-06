@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 public class Service {
 
     public static HashMap<String, Handler> urlsHandler = new HashMap<String, Handler>();
-    private static final int PUERTO = 35000;
+    private static final int PUERTO = getPort();
     private static File RUTA_RESOURCES = new File("src/main/resources");
 
     public static void init() {
@@ -209,6 +209,13 @@ public class Service {
             fileIn.close();
         }
         return fileData;
+    }
+
+    static int getPort() {
+        if (System.getenv("PORT") != null) {
+            return Integer.parseInt(System.getenv("PORT"));
+        }
+        return 4567; //returns default port if heroku-port isn't set (i.e.on localhost)
     }
 
 }
