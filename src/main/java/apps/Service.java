@@ -1,22 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package apps;
 
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Method;
+import java.net.FileNameMap;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLConnection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.sf.image4j.codec.ico.ICODecoder;
-import net.sf.image4j.codec.ico.ICOEncoder;
 
 /**
  *
@@ -104,7 +97,7 @@ public class Service {
             if (inputLine.contains("GET")) {
                 solicitud = inputLine; // Lee la primera linea de la solicitud
                 System.out.println("Solicitud: " + solicitud); //Ejemplo: GET / HTTP/1.1
-                readRequest(solicitud, out, salidaDatos, clientSocket);                
+                readRequest(solicitud, out, salidaDatos);                
             }
             if (!in.ready()) { //Ready devuelve verdadero si la secuencia está lista para ser leída.
                 break;
@@ -114,7 +107,7 @@ public class Service {
         salidaDatos.flush();
     }
 
-    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos, Socket clientSocket) throws IOException {
+    public static void readRequest(String solicitud, PrintWriter out, BufferedOutputStream salidaDatos) throws IOException {
         StringTokenizer tokens = new StringTokenizer(solicitud); // Divide la solicitud en diferentes "tokens" separados por espacio.
         String metodo = tokens.nextToken().toUpperCase(); // Obtenemos el primer token, que en este caso es el metodo de
         // la solicitud HTTP.
@@ -124,14 +117,8 @@ public class Service {
         //String archivo = requestURISplit[requestURISplit.length-1];
         String archivo = requestURI;
         System.out.println("archivo " + archivo);
-        if (requestURI.contains("favicon.ico")) {
-            out.println("HTTP/1.1 200 OK\r");
-            out.println("Content-Type: image/vnd.microsoft.icon\r");
-            out.println("\r");
-            List<BufferedImage> images = ICODecoder
-                    .read(new File(System.getProperty("user.dir") +RUTA_RESOURCES));
-            ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
-        }if (requestURI.contains("apps")) {
+
+        if (requestURI.contains("apps")) {
             searchFilesInApps(archivo, out, salidaDatos);
         } else {
             searchFilesInStaticResources(archivo.substring(archivo.indexOf("/") + 1), out, salidaDatos);
@@ -149,26 +136,25 @@ public class Service {
         }
         System.out.println("NOMBRE ARCHIVO A BUSCAR : "+ archivo);
         if (urlsHandler.containsKey(archivo)) {
-            System.out.println("LO ENCONTRO\r");            
-            out.write("HTTP/1.1 200 OK\r");
-            out.write("Content-Type: text/html\r");
-            if(useParam) out.println(urlsHandler.get(archivo).process(parametro)+"\r");
+            System.out.println("LO ENCONTRO");            
+            out.println("HTTP/1.1 200 OK");
+            out.println("Content-Type: text/html");
+            out.println("\r\n");
+            if(useParam) out.println(urlsHandler.get(archivo).process(parametro));
             else {
-                System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process()+"\r");
+                System.out.println("RTA sin parametro: "+urlsHandler.get(archivo).process());
                 out.write(urlsHandler.get(archivo).process());
-            }
-            out.write("\r");
+            }            
         }else {            
             archivo = "fileNotFound.html";
             File file = new File(RUTA_RESOURCES, archivo);
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 404 NOT FOUND\r");
-            out.write("Content-Type: text/html\r");
-            out.write("Content-length: " + fileLength +"\r");
-            out.write("\r");
-            //out.write("\r\n");            
+            out.println("HTTP/1.1 404 NOT FOUND");
+            out.println("Content-Type: text/html");
+            out.println("Content-length: " + fileLength);
+            out.println("\r\n");            
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
@@ -181,13 +167,14 @@ public class Service {
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 202 OK\r");
+            out.println("HTTP/1.1 202 OK");
             
-            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.write("Content-Type: image/jpeg\r");
-            else if(archivo.contains("png")) out.write("Content-Type: image/png\r");
-            else if(archivo.contains("html")) out.write("Content-Type: text/html\r");            
-            out.write("Content-length: " + fileLength +"\r");
-            out.write("\r");
+            if(archivo.contains("jpg") || archivo.contains("jpeg")) out.println("Content-Type: image/jpeg");
+            else if(archivo.contains("png")) out.println("Content-Type: image/png");
+            else if(archivo.contains("html")) out.println("Content-Type: text/html");
+            
+            out.println("Content-length: " + fileLength);
+            out.println("\r\n");
             out.flush();
             
             salidaDatos.write(datos, 0, fileLength);
@@ -198,10 +185,10 @@ public class Service {
             int fileLength = (int) file.length();
             byte[] datos = convertirABytes(file, fileLength);
             
-            out.write("HTTP/1.1 404 BAD REQUEST\r");
-            out.write("Content-Type: text/html\r");
-            out.write("Content-length: " + fileLength +"\r");
-            out.write("\r");
+            out.println("HTTP/1.1 404 BAD REQUEST");
+            out.println("Content-Type: text/html");
+            out.println("Content-length: " + fileLength);
+            out.println("\r\n");
             out.flush();
             salidaDatos.write(datos, 0, fileLength);
             salidaDatos.flush();
