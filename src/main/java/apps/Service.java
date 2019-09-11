@@ -45,7 +45,7 @@ public class Service {
     public static void addMethod(String className) {
         Class<?> clase;
         try {
-            clase = Class.forName("WebServiceHello");
+            clase = Class.forName(className);
             Method[] methods = clase.getMethods();
             for (Method method : methods) {
                 if (method.isAnnotationPresent(Web.class)) {
@@ -215,18 +215,6 @@ public class Service {
             List<BufferedImage> images = ICODecoder.read(new File(RUTA_RESOURCES + archivo));
             ICOEncoder.write(images.get(0), clientSocket.getOutputStream());
         }         
-    }
-
-    private static byte[] convertirABytes(File file, int fileLength) throws IOException {
-        FileInputStream fileIn = null;
-        byte[] fileData = new byte[fileLength];
-
-        fileIn = new FileInputStream(file);
-        fileIn.read(fileData);
-        if (fileIn != null) {
-            fileIn.close();
-        }
-        return fileData;
     }
 
     static int getPort() {
